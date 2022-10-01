@@ -1,8 +1,8 @@
 import React, { Suspense, useRef, useState, useEffect } from "react"
-import { Canvas, useFrame } from "react-three-fiber"
-import { ContactShadows, Environment, useGLTF, OrbitControls } from "drei"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { ContactShadows, Environment, useGLTF, OrbitControls } from "@react-three/drei"
 import { HexColorPicker } from "react-colorful"
-import { proxy, useProxy } from "valtio"
+import { proxy, useSnapshot } from "valtio"
 
 // Using a Valtio state model to bridge reactivity between
 // the canvas and the dom, both can write to it and/or react to it.
@@ -22,7 +22,7 @@ const state = proxy({
 
 function Shoe() {
   const ref = useRef()
-  const snap = useProxy(state)
+  const snap = useSnapshot(state)
   // Drei's useGLTF hook sets up draco automatically, that's how it differs from useLoader(GLTFLoader, url)
   // { nodes, materials } are extras that come from useLoader, these do not exist in threejs/GLTFLoader
   // nodes is a named collection of meshes, materials a named collection of materials
@@ -67,7 +67,7 @@ function Shoe() {
 }
 
 function Picker() {
-  const snap = useProxy(state)
+  const snap = useSnapshot(state)
   return (
     <div style={{ display: snap.current ? "block" : "none" }}>
       <HexColorPicker className="picker" color={snap.items[snap.current]} onChange={(color) => (state.items[snap.current] = color)} />
@@ -77,6 +77,12 @@ function Picker() {
 }
 
 export default function App() {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!!ref.current) console.log(ref.current)
+  }, [ref?.current])
+
   return (
     <>
       <Canvas concurrent pixelRatio={[1, 1.5]} camera={{ position: [0, 0, 2.75] }}>
@@ -87,7 +93,7 @@ export default function App() {
           <Environment files="royal_esplanade_1k.hdr" />
           <ContactShadows rotation-x={Math.PI / 2} position={[0, -0.8, 0]} opacity={0.25} width={10} height={10} blur={2} far={1} />
         </Suspense>
-        <OrbitControls minPolarAngle={Math.PI / 2} maxPolarAngle={Math.PI / 2} enableZoom={false} enablePan={false} />
+        <OrbitControls minPolarAngle={Math.PI / 2} maxPolarAngle={Math.PI / 2} ref={ref} minDistance={1.8} maxDistance={5} enablePan={false} />
       </Canvas>
       <Picker />
     </>
